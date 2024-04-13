@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 
 def seperate_data(data, labels, ratio):
     N = data.shape[0]
-    indices = np.random.permutation(N)
-    data = data[indices]
-    labels = labels[indices]
-
     N_train = int(ratio * N)
     train_data = data[:N_train]
     train_labels = labels[:N_train]
@@ -18,7 +14,7 @@ def seperate_data(data, labels, ratio):
 def train(data, labels):
     weight = np.zeros(data.shape[1])
     converged = False
-    epoch = 0
+    num_of_iterations = 0
     while not converged:
         converged = True
         for i in range(data.shape[0]):
@@ -27,9 +23,8 @@ def train(data, labels):
             if (np.dot(x, weight) * y <= 0):
                 weight += y * x
                 converged = False
-        epoch += 1
-    return weight
-
+                num_of_iterations += 1
+    return weight, num_of_iterations
 def test(data, labels, weight):
     correct = 0
     for i in range(data.shape[0]):
@@ -40,7 +35,7 @@ def test(data, labels, weight):
     accuracy = correct / data.shape[0]
     return accuracy
 
-def plot_data_and_boundaries(data, labels, weight, title):
+def plot_data_and_boundaries(data, labels, weight, num_of_iterations, title):
     _, ax = plt.subplots()
     data = data[:, -2:]  
     weight_relevant = weight[-2:] 
@@ -53,7 +48,7 @@ def plot_data_and_boundaries(data, labels, weight, title):
     ax.plot(x_values, y_values, 'k--', label='Decision Boundary')
     ax.set_xlabel('Feature 1')
     ax.set_ylabel('Feature 2')
-    ax.set_title(title)
+    ax.set_title(f"{title}\nNumber of Iterations: {num_of_iterations}")
     ax.legend()
     plt.show()
 
@@ -73,13 +68,14 @@ def main():
     else:
         ratio = 0.9
     train_data, train_labels, test_data, test_labels = seperate_data(data, labels, ratio)
-    weight = train(train_data, train_labels)
+    weight, num_of_iterations = train(train_data, train_labels)
     accuracy = test(test_data, test_labels, weight)
     print(f"Accuracy: {accuracy}")
 
     plot_data_and_boundaries(data,
                              labels,
                              weight,
+                             num_of_iterations,
                              f"Decision Boundary for {size.capitalize()} Dataset")
 
 if __name__ == "__main__":
