@@ -2,14 +2,6 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 
-def seperate_data(data, labels, ratio):
-    N = data.shape[0]
-    N_train = int(ratio * N)
-    train_data = data[:N_train]
-    train_labels = labels[:N_train]
-    test_data = data[N_train:]
-    test_labels = labels[N_train:]
-    return train_data, train_labels, test_data, test_labels
 
 def train(data, labels):
     weight = np.zeros(data.shape[1])
@@ -25,15 +17,6 @@ def train(data, labels):
                 converged = False
                 num_of_iterations += 1
     return weight, num_of_iterations
-def test(data, labels, weight):
-    correct = 0
-    for i in range(data.shape[0]):
-        x = data[i]
-        y = labels[i]
-        if (np.dot(x, weight) * y > 0):
-            correct += 1
-    accuracy = correct / data.shape[0]
-    return accuracy
 
 def plot_data_and_boundaries(data, labels, weight, num_of_iterations, title):
     _, ax = plt.subplots()
@@ -62,16 +45,7 @@ def main():
 
     data = np.load(data_file)
     labels = np.load(label_file)
-
-    if size == "large":
-        ratio = 0.8
-    else:
-        ratio = 0.9
-    train_data, train_labels, test_data, test_labels = seperate_data(data, labels, ratio)
-    weight, num_of_iterations = train(train_data, train_labels)
-    accuracy = test(test_data, test_labels, weight)
-    print(f"Accuracy: {accuracy}")
-
+    weight, num_of_iterations = train(data, labels)
     plot_data_and_boundaries(data,
                              labels,
                              weight,
