@@ -34,7 +34,6 @@ def read_data(path):
                 lines.append(line)
             else:
                 break
-        print(type(X[0][0]))
     return np.array(X), np.array(y), lines
 
 class NaiveBayes:
@@ -67,7 +66,6 @@ class NaiveBayes:
             posteriors = {}
             for c in self.classes:
                 prior = self.class_probabilities[c]
-                print(np.log(self.calculate_gaussian(c, x)))
                 likelihood = np.prod(self.calculate_gaussian(c, x))
                 posterior = prior * likelihood
                 posteriors[c] = posterior
@@ -82,12 +80,22 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(features, targets)
     classifier = NaiveBayes()
     classifier.fit(X_train, y_train)
-    predictions = classifier.predict(X_test)
+    test_predictions = classifier.predict(X_test)
 
     count = 0
     correct = 0
-    for i in range(len(predictions)):
-        if y_test[i] == predictions[i]:
+    for i in range(len(test_predictions)):
+        if y_test[i] == test_predictions[i]:
+            correct += 1
+        count += 1
+    
+    print(correct, count)
+
+    train_predictions = classifier.predict(X_train)
+    count = 0
+    correct = 0
+    for i in range(len(train_predictions)):
+        if y_train[i] == train_predictions[i]:
             correct += 1
         count += 1
     
