@@ -98,7 +98,7 @@ class LogisticRegression:
 
             if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
                 break
-        print(len(losses))
+        # print(len(losses))
         return losses
     
     def stochastic(self, X, y, is_regularized=False):
@@ -174,6 +174,7 @@ class LogisticRegression:
             accuracies.append(accuracy_sum / num_folds)
         
         best_param = regularization_params[np.argmax(accuracies)]
+        print(f"Best regularization parameter: {best_param}")
         return best_param
 
 # Example usage:
@@ -188,8 +189,8 @@ if __name__ == "__main__":
         is_regularized = False
 
 
-    losses_gd = model.full_batch(X_train, y_train)
-    losses_sgd = model.stochastic(X_train, y_train)
+    losses_gd = model.full_batch(X_train, y_train, is_regularized)
+    losses_sgd = model.stochastic(X_train, y_train, is_regularized)
     plt.figure(figsize=(10, 5))
     plt.plot(losses_gd, label='Gradient Descent')
     plt.plot(losses_sgd, label='Stochastic Gradient Descent')
