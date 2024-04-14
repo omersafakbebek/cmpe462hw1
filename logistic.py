@@ -75,13 +75,12 @@ class LogisticRegression:
     
     def full_batch(self, X, y, is_regularized=False):
         num_samples, num_features = X.shape
-        self.weights = np.zeros(num_features)
         self.bias = 0
         self.algorithm = "full_batch"
         losses = []
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
-        
+        self.weights = np.zeros(num_features)
         # Gradient descent
         for _ in range(self.max_iterations):
             linear_model = np.dot(X, self.weights) + self.bias
@@ -91,6 +90,9 @@ class LogisticRegression:
             # Compute gradients
             dw = (1 / num_samples) * np.dot(X.T, (y_predicted - y)) + self.regularization_param * self.weights
             db = (1 / num_samples) * np.sum(y_predicted - y)
+            # if is_regularized:
+            #     print("logistic dw", dw)
+            #     print("logistic db", db)
             # print(self.weights)
             # Update parameters
             self.weights -= self.learning_rate * dw
@@ -110,6 +112,7 @@ class LogisticRegression:
 
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
+        self.weights = np.zeros(num_features)
         # Stochastic Gradient descent
         for _ in range(self.max_iterations):
             linear_model = np.dot(X, self.weights) + self.bias
@@ -124,6 +127,9 @@ class LogisticRegression:
                 # Compute gradients
                 dw = sample * (y_predicted - label) + self.regularization_param * self.weights
                 db = y_predicted - label
+                # if is_regularized:
+                #     print(dw)
+                #     print(db)
                 # print(self.weights)
                 # Update parameters
                 self.weights -= self.learning_rate * dw
@@ -132,7 +138,7 @@ class LogisticRegression:
             self.learning_rate *= self.decay_rate
             if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
                 break
-        print(len(losses))
+        # print(len(losses))
 
         return losses
 
@@ -145,6 +151,7 @@ class LogisticRegression:
     
     def calculate_regularization_param(self, X_train, y_train, num_folds=5):
         # Split data into folds
+        _, num_features = X_train.shape
         fold_size = len(X_train) // num_folds
         folds_X = [X_train[i*fold_size:(i+1)*fold_size] for i in range(num_folds)]
         folds_y = [y_train[i*fold_size:(i+1)*fold_size] for i in range(num_folds)]
@@ -153,12 +160,13 @@ class LogisticRegression:
         regularization_params = []
         accuracies = []
         
-        for ln_lambda in range(0, -51, -5):
+        for ln_lambda in range(0, -21, -5):
             lambda_val = np.exp(ln_lambda)
-            self.regularization_param = lambda_val
             accuracy_sum = 0
             # Cross-validation
             for i in range(num_folds):
+                self.weights = np.zeros(num_features)
+
                 X_val = folds_X[i]
                 y_val = folds_y[i]
                 X_tr = np.concatenate([folds_X[j] for j in range(num_folds) if j != i])
@@ -174,7 +182,7 @@ class LogisticRegression:
             accuracies.append(accuracy_sum / num_folds)
         
         best_param = regularization_params[np.argmax(accuracies)]
-        print(f"Best regularization parameter: {best_param}")
+        print(f"Best regularization parameter: {best_param}, {np.log(best_param)}")
         return best_param
 
 # Example usage:
