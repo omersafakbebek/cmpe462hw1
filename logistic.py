@@ -112,6 +112,7 @@ class LogisticRegression:
 
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
+        self.learning_rate = 0.01
         self.weights = np.zeros(num_features)
         # Stochastic Gradient descent
         for _ in range(self.max_iterations):
@@ -139,7 +140,7 @@ class LogisticRegression:
             if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
                 break
         # print(len(losses))
-
+        # print("parameter:", self.regularization_param, "loss", losses)
         return losses
 
     
@@ -163,6 +164,7 @@ class LogisticRegression:
         for ln_lambda in range(0, -21, -5):
             lambda_val = np.exp(ln_lambda)
             accuracy_sum = 0
+            self.regularization_param = lambda_val
             # Cross-validation
             for i in range(num_folds):
                 self.weights = np.zeros(num_features)
@@ -177,7 +179,8 @@ class LogisticRegression:
                     self.stochastic(X_tr, y_tr)
                 y_pred = self.predict(X_val)
                 accuracy_sum += np.mean(y_pred == y_val)
-            
+            if self.algorithm == "stochastic":
+                print(f"Accuracy for lambda = {lambda_val}: {accuracy_sum / num_folds}")
             regularization_params.append(lambda_val)
             accuracies.append(accuracy_sum / num_folds)
         
