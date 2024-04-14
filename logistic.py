@@ -1,30 +1,6 @@
 import sys
 import numpy as np
 
-def read_data(path):
-    lines = []
-    X = []
-    y = []
-    with open(path, "r") as f:
-        while(True):
-            line = f.readline()
-            if line:
-                line = line.replace("\n", "")
-                line = line.split(",")
-                y.append(line[-1])
-                x = []
-                x.append(int(line[0]))
-                x.append(map(float, line[1:5]))
-                x.append(int(line[5]))
-                x.append(float(line[6]))
-                X.append(x)
-                lines.append(line)
-            else:
-                break
-    return np.array(X), np.array(y), lines
-
-
-
 def read_arff(path):
     X = []
     y = []
