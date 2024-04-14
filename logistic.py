@@ -179,14 +179,52 @@ class LogisticRegression:
                     self.stochastic(X_tr, y_tr)
                 y_pred = self.predict(X_val)
                 accuracy_sum += np.mean(y_pred == y_val)
-            if self.algorithm == "stochastic":
-                print(f"Accuracy for lambda = {lambda_val}: {accuracy_sum / num_folds}")
             regularization_params.append(lambda_val)
             accuracies.append(accuracy_sum / num_folds)
         
         best_param = regularization_params[np.argmax(accuracies)]
         print(f"Best regularization parameter: {best_param}, {np.log(best_param)}")
         return best_param
+
+
+def plot_gradients(X_train, y_train, model, is_regularized=False):
+    losses_gd = model.full_batch(X_train, y_train, is_regularized)
+    losses_sgd = model.stochastic(X_train, y_train, is_regularized)
+    plt.figure(figsize=(10, 5))
+    plt.plot(losses_gd, label='Gradient Descent')
+    plt.plot(losses_sgd, label='Stochastic Gradient Descent')
+    plt.xlabel('Iteration (GD) / Epoch (SGD)')
+    plt.ylabel('Loss')
+    plt.title('Comparison of Loss Reduction')
+    plt.legend()
+    plt.show()
+
+
+def test_model(model, X_train, y_train, X_test, y_test):
+    y_pred = model.predict(X_train)
+    accuracy = np.mean(y_pred == y_train)
+    print(f"Accuracy on train set: {accuracy}")
+    y_pred = model.predict(X_test)
+    accuracy = np.mean(y_pred == y_test)
+    print(f"Accuracy on test set: {accuracy}")
+    return accuracy
+
+def test_all_models(X_train, y_train, X_test, y_test):
+    model = LogisticRegression(learning_rate=0.01, max_iterations=100000)
+    model.full_batch(X_train, y_train)
+    print("Full batch without regularization")
+    test_model(model, X_train, y_train, X_test, y_test)
+    model.full_batch(X_train, y_train, is_regularized=True)
+    print("Full batch with regularization")
+    test_model(model, X_train, y_train, X_test, y_test)
+
+    model.stochastic(X_train, y_train)
+    print("Stochastic without regularization")
+    test_model(model, X_train, y_train, X_test, y_test)
+    model.stochastic(X_train, y_train, is_regularized=True)
+    print("Stochastic with regularization")
+    test_model(model, X_train, y_train, X_test, y_test)
+
 
 # Example usage:
 if __name__ == "__main__":
@@ -199,36 +237,5 @@ if __name__ == "__main__":
     except:
         is_regularized = False
 
-
-    losses_gd = model.full_batch(X_train, y_train, is_regularized)
-    losses_sgd = model.stochastic(X_train, y_train, is_regularized)
-    plt.figure(figsize=(10, 5))
-    plt.plot(losses_gd, label='Gradient Descent')
-    plt.plot(losses_sgd, label='Stochastic Gradient Descent')
-    plt.xlabel('Iteration (GD) / Epoch (SGD)')
-    plt.ylabel('Loss')
-    plt.title('Comparison of Loss Reduction')
-    plt.legend()
-    plt.show()
-    
-    # # Prediction
-    # test_predictions = model.predict(X_test)
-
-    # count = 0
-    # correct = 0
-    # for i in range(len(test_predictions)):
-    #     if y_test[i] == test_predictions[i]:
-    #         correct += 1
-    #     count += 1
-    
-    # print(correct, count)
-
-    # train_predictions = model.predict(X_train)
-    # count = 0
-    # correct = 0
-    # for i in range(len(train_predictions)):
-    #     if y_train[i] == train_predictions[i]:
-    #         correct += 1
-    #     count += 1
-    
-    # print(correct, count)
+    test_all_models(X_train, y_train, X_test, y_test)
+    # plot_gradients(X_train, y_train, model, is_regularized)
