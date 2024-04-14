@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 def read_arff(path):
     X = []
@@ -56,9 +57,11 @@ def train_test_split(X, y, test_size=0.2, random_state=None):
 
 
 class LogisticRegression:
-    def __init__(self, learning_rate=0.01, num_iterations=1000):
+    def __init__(self, learning_rate=0.01, max_iterations=1000, tolerance=1e-6, decay_rate=0.99):
         self.learning_rate = learning_rate
-        self.num_iterations = num_iterations
+        self.max_iterations = max_iterations
+        self.tolerance = tolerance
+        self.decay_rate = decay_rate
         self.regularization_param = 0
         self.algorithm = None
         self.weights = None
@@ -67,18 +70,24 @@ class LogisticRegression:
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
     
+    def compute_loss(self, y, y_predicted):
+        return -np.mean(y * np.log(y_predicted + 1e-15) + (1 - y) * np.log(1 - y_predicted + 1e-15))
+    
     def full_batch(self, X, y, is_regularized=False):
         num_samples, num_features = X.shape
         self.weights = np.zeros(num_features)
         self.bias = 0
         self.algorithm = "full_batch"
+        losses = []
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
         
         # Gradient descent
-        for _ in range(self.num_iterations):
+        for _ in range(self.max_iterations):
             linear_model = np.dot(X, self.weights) + self.bias
             y_predicted = self.sigmoid(linear_model)
+            current_loss = self.compute_loss(y, y_predicted)
+            losses.append(current_loss)
             # Compute gradients
             dw = (1 / num_samples) * np.dot(X.T, (y_predicted - y)) + self.regularization_param * self.weights
             db = (1 / num_samples) * np.sum(y_predicted - y)
@@ -86,15 +95,27 @@ class LogisticRegression:
             # Update parameters
             self.weights -= self.learning_rate * dw
             self.bias -= self.learning_rate * db
+
+            if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
+                break
+        print(len(losses))
+        return losses
+    
     def stochastic(self, X, y, is_regularized=False):
         _, num_features = X.shape
         self.weights = np.zeros(num_features)
         self.bias = 0
         self.algorithm = "stochastic"
+        losses = []
+
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
         # Stochastic Gradient descent
-        for _ in range(self.num_iterations):
+        for _ in range(self.max_iterations):
+            linear_model = np.dot(X, self.weights) + self.bias
+            y_predicted = self.sigmoid(linear_model)
+            epoch_loss = self.compute_loss(y, y_predicted)
+            losses.append(epoch_loss)
             for i in range(X.shape[0]):
                 sample = X[i]
                 label = y[i]
@@ -107,7 +128,14 @@ class LogisticRegression:
                 # Update parameters
                 self.weights -= self.learning_rate * dw
                 self.bias -= self.learning_rate * db
-    
+
+            self.learning_rate *= self.decay_rate
+            if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
+                break
+        print(len(losses))
+
+        return losses
+
     
     def predict(self, X):
         linear_model = np.dot(X, self.weights) + self.bias
@@ -152,40 +180,43 @@ class LogisticRegression:
 if __name__ == "__main__":
     
     features, targets = read_arff("data/rice+cammeo+and+osmancik/Rice_Cammeo_Osmancik.arff")
-    X_train, X_test, y_train, y_test = train_test_split(features, targets)
-    model = LogisticRegression(learning_rate=0.01, num_iterations=10000)
-    algorithm = sys.argv[1]
+    X_train, X_test, y_train, y_test = train_test_split(features, targets, random_state=42)
+    model = LogisticRegression(learning_rate=0.01, max_iterations=100000)
     try:
-        is_regularized = bool(sys.argv[2])
+        is_regularized = bool(sys.argv[1])
     except:
         is_regularized = False
 
 
-    if algorithm == "full_batch":
-        model.full_batch(X_train, y_train, is_regularized)
-    elif algorithm == "stochastic":
-        model.stochastic(X_train, y_train, is_regularized)
-    else:
-        print("Invalid algorithm")
+    losses_gd = model.full_batch(X_train, y_train)
+    losses_sgd = model.stochastic(X_train, y_train)
+    plt.figure(figsize=(10, 5))
+    plt.plot(losses_gd, label='Gradient Descent')
+    plt.plot(losses_sgd, label='Stochastic Gradient Descent')
+    plt.xlabel('Iteration (GD) / Epoch (SGD)')
+    plt.ylabel('Loss')
+    plt.title('Comparison of Loss Reduction')
+    plt.legend()
+    plt.show()
     
-    # Prediction
-    test_predictions = model.predict(X_test)
+    # # Prediction
+    # test_predictions = model.predict(X_test)
 
-    count = 0
-    correct = 0
-    for i in range(len(test_predictions)):
-        if y_test[i] == test_predictions[i]:
-            correct += 1
-        count += 1
+    # count = 0
+    # correct = 0
+    # for i in range(len(test_predictions)):
+    #     if y_test[i] == test_predictions[i]:
+    #         correct += 1
+    #     count += 1
     
-    print(correct, count)
+    # print(correct, count)
 
-    train_predictions = model.predict(X_train)
-    count = 0
-    correct = 0
-    for i in range(len(train_predictions)):
-        if y_train[i] == train_predictions[i]:
-            correct += 1
-        count += 1
+    # train_predictions = model.predict(X_train)
+    # count = 0
+    # correct = 0
+    # for i in range(len(train_predictions)):
+    #     if y_train[i] == train_predictions[i]:
+    #         correct += 1
+    #     count += 1
     
-    print(correct, count)
+    # print(correct, count)
