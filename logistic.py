@@ -104,7 +104,7 @@ class LogisticRegression:
         # print(len(losses))
         return losses
     
-    def stochastic(self, X, y, is_regularized=False):
+    def stochastic(self, X, y, is_regularized=False, learning_rate=None):
         _, num_features = X.shape
         self.algorithm = "stochastic"
         losses = []
@@ -112,6 +112,8 @@ class LogisticRegression:
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
         self.learning_rate = 0.01
+        if (learning_rate is not None):
+            self.learning_rate = learning_rate
         self.weights = np.zeros(num_features)
         self.bias = 0
         # Stochastic Gradient descent
@@ -199,7 +201,23 @@ def plot_gradients(X_train, y_train, model, is_regularized=False):
     plt.legend()
     plt.show()
 
+def train_with_different_learning_rates_and_plot_gradients(X_train, y_train):
+    learning_rates = [0.005, 0.01, 0.15]
+    losses_list = []
+    for learning_rate in learning_rates:
+        model = LogisticRegression(max_iterations=100000)
+        losses=model.stochastic(X_train, y_train, learning_rate=learning_rate)
+        losses_list.append(losses)
 
+    plt.figure(figsize=(10, 5))
+    for i in range(len(losses_list)):
+        plt.plot(losses_list[i], label=f'Stochastic Gradient Descent with learning rate = {learning_rates[i]}')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Comparison of Loss Reduction For Different Learning Rates')
+    plt.legend()
+    plt.show()
+    
 def test_model(model, X_train, y_train, X_test, y_test):
     y_pred = model.predict(X_train)
     accuracy = np.mean(y_pred == y_train)
@@ -239,3 +257,4 @@ if __name__ == "__main__":
 
     test_all_models(X_train, y_train, X_test, y_test)
     # plot_gradients(X_train, y_train, model, is_regularized)
+    # train_with_different_learning_rates_and_plot_gradients(X_train, y_train)

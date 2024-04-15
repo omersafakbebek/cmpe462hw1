@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 
 
 def train(data, labels):
-    weight = np.zeros(data.shape[1])
+    weight = np.zeros(data.shape[1]) ## Zero vector initialization
+    # weight = np.random.rand(data.shape[1]) ## Random vector initialization
+    print(f"Initial Weight: {weight}")
     converged = False
     num_of_iterations = 0
     while not converged:
@@ -20,12 +22,13 @@ def train(data, labels):
 
 def plot_data_and_boundaries(data, labels, weight, num_of_iterations, title):
     _, ax = plt.subplots()
-    data = data[:, -2:]  
+    data = data[:, -2:]
     weight_relevant = weight[-2:] 
 
     for label in np.unique(labels):
+        marker = 'o' if label == 1 else 'x'
         idx = np.where(labels == label)
-        ax.scatter(data[idx, 0], data[idx, 1], label=f"Class {label}", s=10)
+        ax.scatter(data[idx, 0], data[idx, 1], label=f"Class {label}", s=10, marker=marker)
     x_values = np.array([np.min(data[:, 0]), np.max(data[:, 0])])
     y_values = -(weight_relevant[0] * x_values + weight[0]) / weight_relevant[1] 
     ax.plot(x_values, y_values, 'k--', label='Decision Boundary')
@@ -46,6 +49,8 @@ def main():
     data = np.load(data_file)
     labels = np.load(label_file)
     weight, num_of_iterations = train(data, labels)
+    print(f"Number of iterations: {num_of_iterations}")
+    print(f"Weight: {weight}")
     plot_data_and_boundaries(data,
                              labels,
                              weight,
