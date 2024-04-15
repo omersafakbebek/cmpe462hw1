@@ -77,6 +77,7 @@ class LogisticRegression:
     def full_batch(self, X, y, is_regularized=False, is_calculate=False):
         num_samples, num_features = X.shape
         self.algorithm = "full_batch"
+        self.learning_rate = 0.01
         losses = []
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
