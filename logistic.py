@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 def read_arff(path):
     X = []
@@ -73,12 +74,14 @@ class LogisticRegression:
     def compute_loss(self, y, y_predicted):
         return -np.mean(y * np.log(y_predicted + 1e-15) + (1 - y) * np.log(1 - y_predicted + 1e-15))
     
-    def full_batch(self, X, y, is_regularized=False):
+    def full_batch(self, X, y, is_regularized=False, is_calculate=False):
         num_samples, num_features = X.shape
         self.algorithm = "full_batch"
         losses = []
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
+        elif not is_calculate:
+            self.regularization_param = 0
         self.weights = np.zeros(num_features)
         self.bias = 0
 
@@ -91,26 +94,23 @@ class LogisticRegression:
             # Compute gradients
             dw = (1 / num_samples) * np.dot(X.T, (y_predicted - y)) + self.regularization_param * self.weights
             db = (1 / num_samples) * np.sum(y_predicted - y)
-            # if is_regularized:
-            #     print("logistic dw", dw)
-            #     print("logistic db", db)
-            # print(self.weights)
             # Update parameters
             self.weights -= self.learning_rate * dw
             self.bias -= self.learning_rate * db
 
             if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
                 break
-        # print(len(losses))
         return losses
     
-    def stochastic(self, X, y, is_regularized=False, learning_rate=None):
+    def stochastic(self, X, y, is_regularized=False, learning_rate=None, is_calculate=False):
         _, num_features = X.shape
         self.algorithm = "stochastic"
         losses = []
 
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
+        elif not is_calculate:
+            self.regularization_param = 0
         self.learning_rate = 0.01
         if (learning_rate is not None):
             self.learning_rate = learning_rate
@@ -130,10 +130,6 @@ class LogisticRegression:
                 # Compute gradients
                 dw = sample * (y_predicted - label) + self.regularization_param * self.weights
                 db = y_predicted - label
-                # if is_regularized:
-                #     print(dw)
-                #     print(db)
-                # print(self.weights)
                 # Update parameters
                 self.weights -= self.learning_rate * dw
                 self.bias -= self.learning_rate * db
@@ -141,8 +137,6 @@ class LogisticRegression:
             self.learning_rate *= self.decay_rate
             if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < self.tolerance:
                 break
-        # print(len(losses))
-        # print("parameter:", self.regularization_param, "loss", losses)
         return losses
 
     
@@ -176,9 +170,9 @@ class LogisticRegression:
                 X_tr = np.concatenate([folds_X[j] for j in range(num_folds) if j != i])
                 y_tr = np.concatenate([folds_y[j] for j in range(num_folds) if j != i])
                 if self.algorithm == "full_batch":
-                    self.full_batch(X_tr, y_tr)
+                    self.full_batch(X_tr, y_tr, is_calculate=True)
                 else:
-                    self.stochastic(X_tr, y_tr)
+                    self.stochastic(X_tr, y_tr, is_calculate=True)
                 y_pred = self.predict(X_val)
                 accuracy_sum += np.mean(y_pred == y_val)
             regularization_params.append(lambda_val)
@@ -190,8 +184,13 @@ class LogisticRegression:
 
 
 def plot_gradients(X_train, y_train, model, is_regularized=False):
+    start = time.time()
     losses_gd = model.full_batch(X_train, y_train, is_regularized)
+    end = time.time()
     losses_sgd = model.stochastic(X_train, y_train, is_regularized)
+    end2 = time.time()
+    print(f"Full batch time: {end - start}")
+    print(f"Stochastic time: {end2 - end}")
     plt.figure(figsize=(10, 5))
     plt.plot(losses_gd, label='Gradient Descent')
     plt.plot(losses_sgd, label='Stochastic Gradient Descent')
@@ -255,6 +254,6 @@ if __name__ == "__main__":
     except:
         is_regularized = False
 
-    test_all_models(X_train, y_train, X_test, y_test)
-    # plot_gradients(X_train, y_train, model, is_regularized)
+    # test_all_models(X_train, y_train, X_test, y_test)
+    plot_gradients(X_train, y_train, model, is_regularized)
     # train_with_different_learning_rates_and_plot_gradients(X_train, y_train)
