@@ -1,4 +1,5 @@
 import numpy as np
+import logistic
 
 def train_test_split(X, y, test_size=0.2, random_state=None):
     if random_state is not None:
@@ -35,6 +36,30 @@ def read_data(path):
             else:
                 break
     return np.array(X), np.array(y), lines
+
+def read_data_for_logistic(path):
+    X = []
+    y = []
+    with open(path, "r") as f:
+        while(True):
+            line = f.readline()
+            if line:
+                line = line.replace("\n", "")
+                line = line.split(",")
+                if line[1] == "B":
+                    y.append(0)
+                else:
+                    y.append(1)
+                x = list(map(float, line[2:]))
+                X.append(x)
+            else:
+                break
+
+    X = np.array(X)
+    y = np.array(y)
+    X_scaled = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
+    return X_scaled, y
+
 
 class NaiveBayes:
     def __init__(self):
@@ -77,26 +102,21 @@ if __name__ == "__main__":
     #targets: M = malignant B = benign
     #features: radius1, texture1, perimeter1, area1, smoothness1, compactness1, concavity1, concave_points1
     features, targets, lines = read_data("data/Breast Cancer Wisconsin Diagnostic/wdbc.data")
-    X_train, X_test, y_train, y_test = train_test_split(features, targets)
+    X_train, X_test, y_train, y_test = train_test_split(features, targets, random_state=51)
     classifier = NaiveBayes()
     classifier.fit(X_train, y_train)
-    test_predictions = classifier.predict(X_test)
-
-    count = 0
-    correct = 0
-    for i in range(len(test_predictions)):
-        if y_test[i] == test_predictions[i]:
-            correct += 1
-        count += 1
-    
-    print(correct, count)
 
     train_predictions = classifier.predict(X_train)
-    count = 0
-    correct = 0
-    for i in range(len(train_predictions)):
-        if y_train[i] == train_predictions[i]:
-            correct += 1
-        count += 1
-    
-    print(correct, count)
+    accuracy = np.mean(train_predictions == y_train)
+    print("train accuracy:", accuracy)
+
+    test_predictions = classifier.predict(X_test)
+    accuracy = np.mean(test_predictions == y_test)
+    print("test accuracy:", accuracy)
+
+    features, targets = read_data_for_logistic("data/Breast Cancer Wisconsin Diagnostic/wdbc.data")
+    X_train, X_test, y_train, y_test = train_test_split(features, targets, random_state=51)
+    logistic_model = logistic.LogisticRegression(learning_rate=0.01, max_iterations=100000)
+    logistic_model.full_batch(X_train, y_train)
+    print("test for logistic regression")
+    logistic.test_model(logistic_model, X_train, y_train, X_test, y_test)

@@ -75,12 +75,13 @@ class LogisticRegression:
     
     def full_batch(self, X, y, is_regularized=False):
         num_samples, num_features = X.shape
-        self.bias = 0
         self.algorithm = "full_batch"
         losses = []
         if is_regularized:
             self.regularization_param = self.calculate_regularization_param(X, y)
         self.weights = np.zeros(num_features)
+        self.bias = 0
+
         # Gradient descent
         for _ in range(self.max_iterations):
             linear_model = np.dot(X, self.weights) + self.bias
@@ -105,8 +106,6 @@ class LogisticRegression:
     
     def stochastic(self, X, y, is_regularized=False):
         _, num_features = X.shape
-        self.weights = np.zeros(num_features)
-        self.bias = 0
         self.algorithm = "stochastic"
         losses = []
 
@@ -114,6 +113,7 @@ class LogisticRegression:
             self.regularization_param = self.calculate_regularization_param(X, y)
         self.learning_rate = 0.01
         self.weights = np.zeros(num_features)
+        self.bias = 0
         # Stochastic Gradient descent
         for _ in range(self.max_iterations):
             linear_model = np.dot(X, self.weights) + self.bias
@@ -168,7 +168,7 @@ class LogisticRegression:
             # Cross-validation
             for i in range(num_folds):
                 self.weights = np.zeros(num_features)
-
+                self.bias = 0
                 X_val = folds_X[i]
                 y_val = folds_y[i]
                 X_tr = np.concatenate([folds_X[j] for j in range(num_folds) if j != i])
