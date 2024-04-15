@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 
 
 def train(data, labels):
-    weight = np.zeros(data.shape[1])
+    # weight = np.zeros(data.shape[1]) ## Zero vector initialization
+    weight = np.random.rand(data.shape[1]) ## Random vector initialization
+    print(f"Initial Weight: {weight}")
     converged = False
     num_of_iterations = 0
     while not converged:
@@ -20,7 +22,7 @@ def train(data, labels):
 
 def plot_data_and_boundaries(data, labels, weight, num_of_iterations, title):
     _, ax = plt.subplots()
-    data = data[:, -2:]  
+    data = data[:, -2:]
     weight_relevant = weight[-2:] 
 
     for label in np.unique(labels):
@@ -46,6 +48,8 @@ def main():
     data = np.load(data_file)
     labels = np.load(label_file)
     weight, num_of_iterations = train(data, labels)
+    print(f"Number of iterations: {num_of_iterations}")
+    print(f"Weight: {weight}")
     plot_data_and_boundaries(data,
                              labels,
                              weight,
